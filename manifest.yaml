@@ -1,0 +1,116 @@
+---
+# Source: hello-cloudeteer/templates/pvc.yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: RELEASE-NAME-hello-cloudeteer
+  labels:
+    helm.sh/chart: hello-cloudeteer-0.1.0
+    app.kubernetes.io/name: hello-cloudeteer
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+---
+# Source: hello-cloudeteer/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: RELEASE-NAME-hello-cloudeteer
+  labels:
+    helm.sh/chart: hello-cloudeteer-0.1.0
+    app.kubernetes.io/name: hello-cloudeteer
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    "helm.sh/resource-policy": keep
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: hello-cloudeteer
+    app.kubernetes.io/instance: RELEASE-NAME
+---
+# Source: hello-cloudeteer/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: RELEASE-NAME-hello-cloudeteer
+  labels:
+    helm.sh/chart: hello-cloudeteer-0.1.0
+    app.kubernetes.io/name: hello-cloudeteer
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: hello-cloudeteer
+      app.kubernetes.io/instance: RELEASE-NAME
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: hello-cloudeteer
+        app.kubernetes.io/instance: RELEASE-NAME
+    spec:
+      serviceAccountName: default
+      securityContext:
+        {}
+      containers:
+        - name: hello-cloudeteer
+          securityContext:
+            {}
+          image: "gcr.io/google-samples/hello-app:2.0"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          resources:
+            {}
+          volumeMounts:
+          - name: volume
+            mountPath: /data
+      volumes:
+      - name: volume
+        persistentVolumeClaim:
+          claimName: RELEASE-NAME-hello-cloudeteer
+---
+# Source: hello-cloudeteer/templates/tests/test-connection.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "RELEASE-NAME-hello-cloudeteer-test-connection"
+  labels:
+    helm.sh/chart: hello-cloudeteer-0.1.0
+    app.kubernetes.io/name: hello-cloudeteer
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: ['RELEASE-NAME-hello-cloudeteer:80']
+  restartPolicy: Never

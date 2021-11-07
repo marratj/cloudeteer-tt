@@ -1,0 +1,17 @@
+{{- if .Values.persistentStorage.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "hello-cloudeteer.fullname" . }}
+  labels:
+    {{- include "hello-cloudeteer.labels" . | nindent 4 }}
+spec:
+  {{- if .Values.persistentStorage.storageClass }}
+  storageClassName:  {{ .Values.persistentStorage.storageClass }}
+  {{- end }}
+  resources:
+    requests: 
+      storage: {{ .Values.persistentStorage.size }}
+  accessModes:
+    - {{ .Values.persistentStorage.accessMode }}
+{{- end }}
