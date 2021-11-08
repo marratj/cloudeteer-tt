@@ -16,18 +16,27 @@ imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
 
+envVars: {}
+# - name: blub
+#   value: bla
+
 persistentStorage:
-  storageClass: {}
+  # if no storage class is defined, the default of the cluster will be used
+  storageClass: ""
   size: 10Gi
   enabled: true
+  # keep in mind that you can only use more than 1 replica with persistent storage
+  # when accessing the volume as ReadWriteMany or ReadOnlyMany, not with ReadWriteOnce
+  # default is ReadWriteOnce for one replica
   accessMode: ReadWriteOnce 
 
 mysql:
-  enabled: false
+  enabled: true
+  architecture: standalone # we will only use a single-instance MySQL server
 
 serviceAccount:
   # Specifies whether a service account should be created
-  create: false
+  create: true
   # Annotations to add to the service account
   annotations: {}
   # The name of the service account to use.
@@ -36,20 +45,17 @@ serviceAccount:
 
 podAnnotations: {}
 
-podSecurityContext: {}
-  # fsGroup: 2000
-
-securityContext: {}
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1000
+securityContext:
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
 
 service:
   type: ClusterIP
-  port: 80
+  port: 8080
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
